@@ -2,7 +2,8 @@
 	RoboCore Alphanumeric Display Library
 		(v1.0 - 30/10/2012)
 
-  Alphanumeric Display library, based on the Sparkfun library (see 1st link).
+  Alphanumeric Display library, based on the Sparkfun library for the driver.
+	(last tested with Arduino 0023)
 
   Released under the Beerware licence
 
@@ -13,9 +14,9 @@ NOTE: wasn't able to use the Sparkfun library, therefore made some modifications
 	with 3 drivers + display.
 
 
- Use with Sparkfun's Alphanumeric Display/Driver:
- - https://www.sparkfun.com/products/10103 (driver)
- - https://www.sparkfun.com/products/9933 (display)
+ Use with RoboCore's Alphanumeric Display/Driver:
+ - http://www.robocore.net/modules.php?name=GR_LojaVirtual&prod=338 (driver)
+ - http://www.robocore.net/modules.php?name=GR_LojaVirtual&prod=452 (display)
 
 
 
