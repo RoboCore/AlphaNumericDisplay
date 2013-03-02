@@ -1,96 +1,98 @@
+
 /*
-  AlphaNumeric_Driver.cpp - Arduino library to control a string of AlphaNumeric Display Drivers
-  30/10/12 at Robocore
-  License: Beerware.
+	RoboCore Alpha Numeric Display Library
+		(v1.1 - 01/03/2013)
+
+  Arduino library to control a string of AlphaNumeric Display Drivers
+    (tested with Arduino 0022 and 1.0.1)
+
+  Released under the Beerware licence
+
 */
 
-#include <SPI.h>
 #include "AlphaNumericDisplay.h"
 
-extern "C" {
-   #include "wiring.h"
-}
 
-
-// PUBLIC ---------------------------------------------------
+// PUBLIC ---------------------------------------------------------------------------------------------------------------
 
 
 // Constructor initializes the pins and clears the displays
-AlphaNumericDisplay::AlphaNumericDisplay(const byte SDI, const byte CLK, const byte LE, const byte OE, const byte displays)
-{
-  _SDIpin = SDI;
-  _CLKpin = CLK;
+AlphaNumericDisplay::AlphaNumericDisplay(const byte LE, const byte OE, const byte displays){
+  //SPI pins are automatically set
   _LEpin = LE;
   _OEpin = OE;
   _DisplayAmount = displays;
   _Inverted = false;
   _LastDataSent = ' ';
   _LastStringSent[0] = '\0';
-	
-  pinMode(_SDIpin, OUTPUT);
-  pinMode(_CLKpin, OUTPUT);
+  
   pinMode(_LEpin, OUTPUT);
   pinMode(_OEpin, OUTPUT);
 
-  digitalWrite(_SDIpin, LOW);
-  digitalWrite(_CLKpin, LOW);
   digitalWrite(_LEpin, HIGH);
   digitalWrite(_OEpin, LOW);
-	
+  
   SPI.begin();
+  SPI.setDataMode(SPI_MODE0);
+  SPI.setClockDivider(SPI_CLOCK_DIV4);
 
   Clear();
 }
 
+//-----------------------------------------------------------------------------------------------------------------------
+
 // Constructor initializes the pins and clears the displays
-AlphaNumericDisplay::AlphaNumericDisplay(const byte SDI, const byte CLK, const byte LE, const byte OE, const byte displays, boolean inverted)
-{
-  _SDIpin = SDI;
-  _CLKpin = CLK;
+AlphaNumericDisplay::AlphaNumericDisplay(const byte LE, const byte OE, const byte displays, boolean inverted){
+  //SPI pins are automatically set
   _LEpin = LE;
   _OEpin = OE;
   _DisplayAmount = displays;
   _Inverted = inverted;
   _LastDataSent = ' ';
   _LastStringSent[0] = '\0';
-	
-  pinMode(_SDIpin, OUTPUT);
-  pinMode(_CLKpin, OUTPUT);
+  
   pinMode(_LEpin, OUTPUT);
   pinMode(_OEpin, OUTPUT);
-
-  digitalWrite(_SDIpin, LOW);
-  digitalWrite(_CLKpin, LOW);
+  
   digitalWrite(_LEpin, HIGH);
   digitalWrite(_OEpin, LOW);
-	
+  
   SPI.begin();
-
+  SPI.setDataMode(SPI_MODE0);
+  SPI.setClockDivider(SPI_CLOCK_DIV4);
+  
   Clear();
 }
 
+//-----------------------------------------------------------------------------------------------------------------------
+
+// Destructor
+AlphaNumericDisplay::~AlphaNumericDisplay(void){
+  SPI.end();
+}
+
+//-----------------------------------------------------------------------------------------------------------------------
 
 // Turns the displays on, of the are off
-void AlphaNumericDisplay::On(void)
-{
+void AlphaNumericDisplay::On(void){
   digitalWrite(_OEpin, LOW);
 }
 
+//-----------------------------------------------------------------------------------------------------------------------
 
 // Turns the displays off, if they are on
 // When turned back on, the previously displayed data will still be there
-void AlphaNumericDisplay::Off(void)
-{
+void AlphaNumericDisplay::Off(void){
   digitalWrite(_OEpin, HIGH);
 }
 
+//-----------------------------------------------------------------------------------------------------------------------
+
 //Inverts the display and displays the last CHAR/STRING if wanted
-void AlphaNumericDisplay::Invert(boolean display_last)
-{
+void AlphaNumericDisplay::Invert(boolean display_last){
   Clear();
   _Inverted = !_Inverted;
-  if(display_last)
-  {
+  if(display_last){
     if(_DisplayAmount == 1)
       Print(_LastDataSent);
     else
@@ -98,118 +100,120 @@ void AlphaNumericDisplay::Invert(boolean display_last)
   }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------
+
+//Get if inverted
+boolean AlphaNumericDisplay::isInverted(void){
+  return _Inverted;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------
 
 //Scrolls the message through the display
-void AlphaNumericDisplay::Scroll(char * string, int time)
-{
+void AlphaNumericDisplay::Scroll(char * string, int time){
   Clear();
   
-  if(_Inverted)
-  {
-    for(int i = 0 ; i < TextLength(string) ; i++)
-    {
+  if(_Inverted){
+    for(int i = 0 ; i < TextLength(string) ; i++){
       SendData(DataToDisplay(string[i]));
-      if((i-1) < 0)
-        SendData(DataToDisplay(' '));
-      else
-        SendData(DataToDisplay(string[i-1]));
+      if(_DisplayAmount > 1){ //must offset when inverting
+        if(i == 0)
+          SendData(DataToDisplay(' '));
+        else
+          SendData(DataToDisplay(string[i-1]));
+      }
       delay(time);
     }
-  }
-  else
-  {
-    for(int i = 0 ; i < TextLength(string) ; i++)
-    {
+  } else {
+    for(int i = 0 ; i < TextLength(string) ; i++){
       SendData(DataToDisplay(string[i]));
       delay(time);
     }
   }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------
 
 //Clears the display
-void AlphaNumericDisplay::Clear(void)
-{
+void AlphaNumericDisplay::Clear(void){
   for (int i = 0; i < _DisplayAmount; i++)
     SendData(0);
 }
 
+//-----------------------------------------------------------------------------------------------------------------------
 
 //Prints a CHAR to the display
-void AlphaNumericDisplay::Print(char toPrint)
-{
+void AlphaNumericDisplay::Print(char toPrint){
   unsigned int data = DataToDisplay(toPrint);
   SendData(data);
 }
 
+//-----------------------------------------------------------------------------------------------------------------------
 
 //Prints a STRING to the display
-void AlphaNumericDisplay::Print(char* toPrint)
-{
+void AlphaNumericDisplay::Print(char* toPrint){
   Clear();
   int i;
-  if(_Inverted)
-  {
+  if(_Inverted){
     i = TextLength(toPrint) - 1; //0 based index
     if(i > (_DisplayAmount - 1))
       i = _DisplayAmount - 1;
-    while(i >= 0)
-    {
+    while(i >= 0){
       SendData(DataToDisplay(toPrint[i]));
       i--;
     }
-  }
-  else
-  {
+  } else {
     i = 0;
-    while((toPrint[i] != '\0') && (i < _DisplayAmount)) //'zero'
-    {
+    while((toPrint[i] != '\0') && (i < _DisplayAmount)){ //NULL
       SendData(DataToDisplay(toPrint[i]));
       i++;
     }
   }
   
   i = 0;
-  while((toPrint[i] != '\0') && (i < STRING_MAX_LENGTH)) //'zero'
-  {
+  while((toPrint[i] != '\0') && (i < STRING_MAX_LENGTH)){ //NULL
     _LastStringSent[i] = toPrint[i]; //store last value
     i++;
   }
-  _LastStringSent[i] = '\0'; //use end of string 'zero'
+  _LastStringSent[i] = '\0'; //use end of string NULL
 }
 
+//-----------------------------------------------------------------------------------------------------------------------
 
 //Sends the data to the display
-void AlphaNumericDisplay::SendData(unsigned int data)
-{
-  digitalWrite(_LEpin, HIGH);
-  if(_Inverted)
-  {
+void AlphaNumericDisplay::SendData(unsigned int data){
+  if(_Inverted){
     SPI.transfer((data & 0xFF00) >> 8); //HIGH part
     SPI.transfer(data & 0x00FF);        //LOW part
-  }
-  else
-  {
+  } else {
     SPI.transfer(data & 0x00FF);        //HIGH part
     SPI.transfer((data & 0xFF00) >> 8); //LOW part
   }
-  digitalWrite(_LEpin, LOW);
   _LastDataSent = data; //do it here instead of 'Print(char toPrint)'
 }
 
+//-----------------------------------------------------------------------------------------------------------------------
 
-// PRIVATE ---------------------------------------------------
+//Set the LE pin (HIGH or LOW)
+void AlphaNumericDisplay::SetLEpin(byte state){
+  if(state == HIGH)
+    digitalWrite(_LEpin, HIGH);
+  else
+    digitalWrite(_LEpin, LOW);
+}
+
+// PRIVATE --------------------------------------------------------------------------------------------------------------
 
 
 //Gets the length of a string
-int AlphaNumericDisplay::TextLength(char* text)
-{
+int AlphaNumericDisplay::TextLength(char* text){
   int i = 0;
-  while(text[i] != '\0') //'zero'
+  while(text[i] != '\0') //NULL
     i++;
   return i;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------
 
 //Converts a CHAR to the Displayed LEDs
 unsigned int AlphaNumericDisplay::DataToDisplay(char character)
@@ -469,6 +473,9 @@ unsigned int AlphaNumericDisplay::DataToDisplay(char character)
 
 	return 0;	// Return
 }
+
+//-----------------------------------------------------------------------------------------------------------------------
+
 
 
 

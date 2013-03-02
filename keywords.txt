@@ -1,0 +1,18 @@
+
+AlphaNumericDisplay	KEYWORD1
+
+
+AlphaNumericDisplay	KEYWORD2
+On	KEYWORD2
+Off	KEYWORD2
+Invert	KEYWORD2
+isInverted	KEYWORD2
+Scroll	KEYWORD2
+Clear	KEYWORD2
+Print	KEYWORD2
+SendData	KEYWORD2
+SetLEpin	KEYWORD2
+
+
+
+
