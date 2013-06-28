@@ -2,6 +2,8 @@
 /*
     Exemplo de uso da biblioteca AlphaNumericDisplay
             ( RoboCore - http://www.RoboCore.net )
+    
+    Escrito por François
             
     O exemplo a seguir utiliza 2 displays (pode-se usar a
         quantidade desejada, desde que definida em

@@ -6,7 +6,8 @@
   Arduino library to control a string of AlphaNumeric Display Drivers
     (tested with Arduino 0022 and 1.0.1)
 
-  Released under the Beerware licence
+  Released under the Beerware license
+  Written by François
 
 */
 
